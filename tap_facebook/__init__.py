@@ -13,6 +13,7 @@ import attr
 import pendulum
 import requests
 import backoff
+import argparse
 
 import singer
 import singer.metrics as metrics
@@ -34,6 +35,7 @@ import facebook_business.adobjects.campaign as fb_campaign
 import facebook_business.adobjects.adsinsights as adsinsights
 import facebook_business.adobjects.user as fb_user
 import facebook_business.adobjects.lead as fb_lead
+from facebook_business.adobjects.leadgenform import LeadgenForm
 
 from facebook_business.exceptions import FacebookError, FacebookRequestError, FacebookBadObjectError
 
@@ -61,7 +63,7 @@ STREAMS = [
     'ads_insights_region',
     'ads_insights_dma',
     'ads_insights_hourly_advertiser',
-    #'leads',
+    'leads',
 ]
 
 REQUIRED_CONFIG_KEYS = ['start_date', 'account_id', 'access_token']
@@ -452,6 +454,7 @@ class Leads(Stream):
     replication_key = "created_time"
 
     key_properties = ['id']
+    expand_properties = ['field_data']
     replication_method = 'INCREMENTAL'
 
     def compare_lead_created_times(self, leadA, leadB):
@@ -497,7 +500,7 @@ class Leads(Stream):
 
         # Ensure the final batch is executed
         api_batch.execute()
-        return str(pendulum.parse(latest_lead[self.replication_key]))
+        return str(pendulum.parse(latest_lead[self.replication_key]) if latest_lead else None)
 
     @retry_pattern(backoff.expo, (Timeout, ConnectionError), max_tries=5, factor=2)
     # Added retry_pattern to handle AttributeError raised from account.get_ads() below
@@ -520,11 +523,14 @@ class Leads(Stream):
                                   'value': start_time}]}
         for ad in ads:
             yield from ad.get_leads(params=params)
+        yield from LeadgenForm(fbid=459837039203604).get_leads(params=params)
 
     def sync(self):
         start_time = pendulum.utcnow()
-        previous_start_time = self.state.get("bookmarks", {}).get("leads", {}).get(self.replication_key, CONFIG.get('start_date'))
-
+        if CONFIG.get('is_historical_sync'):
+            previous_start_time = CONFIG.get('start_date')
+        else:
+            previous_start_time = self.state.get("bookmarks", {}).get("leads", {}).get(self.replication_key, CONFIG.get('start_date'))
         previous_start_time = pendulum.parse(previous_start_time)
         ads = self.get_ads()
         leads = self.get_leads(ads, start_time, int(previous_start_time.timestamp()))
@@ -533,7 +539,6 @@ class Leads(Stream):
         if not latest_lead_time is None:
             singer.write_bookmark(self.state, 'leads', self.replication_key, latest_lead_time)
             singer.write_state(self.state)
-
 
 ALL_ACTION_ATTRIBUTION_WINDOWS = [
     '1d_click',
@@ -790,8 +795,8 @@ def do_sync(account, catalog, state):
     refs = load_shared_schema_refs()
     for stream in streams_to_sync:
         LOGGER.info('Syncing %s, fields %s', stream.name, stream.fields())
-        schema = singer.resolve_schema_references(load_schema(stream), refs)
         metadata_map = metadata.to_map(stream.catalog_entry.metadata)
+        schema = singer.resolve_schema_references(load_schema(stream), refs)
         bookmark_key = BOOKMARK_KEYS.get(stream.name)
         singer.write_schema(stream.name, schema, stream.key_properties, bookmark_key, stream.stream_alias)
 
@@ -822,6 +827,16 @@ def get_abs_path(path):
 def load_schema(stream):
     path = get_abs_path('schemas/{}.json'.format(stream.name))
     schema = utils.load_json(path)
+    mdata = stream.catalog_entry.metadata
+
+    expansions = { d['breadcrumb'][1]: d['metadata']['expand'] for d in mdata 
+                    if 'breadcrumb' in d and 'metadata' in d and len(d['breadcrumb']) > 1 and 
+                    'expand' in d['metadata'] }
+
+    if expansions:
+        schema['expansions'] = expansions
+
+    print(schema)
 
     return schema
 
@@ -875,12 +890,40 @@ def do_discover():
 
 
 def main_impl():
-    try:
-        args = utils.parse_args(REQUIRED_CONFIG_KEYS)
-        account_id = args.config['account_id']
-        access_token = args.config['access_token']
 
-        CONFIG.update(args.config)
+    def process_input(filename, json_alternate):
+        if filename:
+            with open(filename) as f:
+                return json.load(f)
+        elif json_alternate:
+            return json.loads(json_alternate)
+
+        return {}
+
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-c', '--config', help='Configuration file')
+        parser.add_argument('-jc', '--config-json', dest='config_json', help='Configuration JSON')
+        parser.add_argument('-p', '--properties', help='File containing supported streams and schemas (deprecated)')
+        parser.add_argument('-jp', '--properties-json', dest='properties_json', help='')
+        parser.add_argument('--catalog', help='File containing suppported streams and schemas')
+        parser.add_argument('--catalog-json', dest='catalog_json', help='Supported streams and schemas as JSON')
+        parser.add_argument('-s', '--state', help='File containing state to persist')
+        parser.add_argument('-js', '--state-json', dest='state_json', help='State JSON')
+        parser.add_argument('-d', '--discover', help='Discover schemas?')
+
+        args = parser.parse_args()
+
+        config = process_input(args.config, args.config_json)
+        catalog = process_input(args.catalog, args.catalog_json)
+        state = process_input(args.state, args.state_json)
+
+        #args = utils.parse_args(REQUIRED_CONFIG_KEYS)
+
+        account_id = config['account_id']
+        access_token = config['access_token']
+
+        CONFIG.update(config)
 
         global RESULT_RETURN_LIMIT
         RESULT_RETURN_LIMIT = CONFIG.get('result_return_limit', RESULT_RETURN_LIMIT)
@@ -893,7 +936,7 @@ def main_impl():
             request_timeout = REQUEST_TIMEOUT # If value is 0,"0","" or not passed then set default to 300 seconds.
 
         global API
-        API = FacebookAdsApi.init(access_token=access_token, timeout=request_timeout)
+        API = FacebookAdsApi.init(access_token=access_token, timeout=request_timeout, api_version='v13.0')
         user = fb_user.User(fbid='me')
 
         accounts = user.get_ad_accounts()
@@ -911,10 +954,10 @@ def main_impl():
             do_discover()
         except FacebookError as fb_error:
             raise_from(SingerDiscoveryError, fb_error)
-    elif args.properties:
-        catalog = Catalog.from_dict(args.properties)
+    elif catalog:
+        catalog = Catalog.from_dict(catalog)
         try:
-            do_sync(account, catalog, args.state)
+            do_sync(account, catalog, state)
         except FacebookError as fb_error:
             raise_from(SingerSyncError, fb_error)
     else:

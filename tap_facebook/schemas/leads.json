@@ -5,61 +5,103 @@
   ],
   "properties": {
     "id": {
-      "type": [
-        "null",
-        "string"
-      ]
+        "type": [
+            "null",
+            "string"
+        ]
     },
     "ad_id": {
-      "type": [
-        "null",
-        "string"
-      ]
+        "type": [
+            "null",
+            "string"
+        ]
+    },
+    "ad_name": {
+        "type": [
+            "null",
+            "string"
+        ]
+    },
+    "adset_id": {
+        "type": [
+            "null",
+            "string"
+        ]
+    },
+    "adset_name": {
+        "type": [
+            "null",
+            "string"
+        ]
+    },
+    "campaign_id": {
+        "type": [
+            "null",
+            "string"
+        ]
+    },
+    "campaign_name": {
+        "type": [
+            "null",
+            "string"
+        ]
     },
     "form_id": {
-      "type": [
-        "null",
-        "string"
-      ]
+        "type": [
+            "null",
+            "string"
+        ]
     },
     "created_time": {
-      "type": [
-        "null",
-        "string"
-      ],
-      "format": "date-time"
+        "type": [
+            "null",
+            "string"
+        ],
+        "format": "date-time"
+    },
+    "is_organic": {
+        "type": [
+            "null",
+            "boolean"
+        ]
+    },
+    "platform": {
+        "type": [
+            "null",
+            "string"
+        ]
     },
     "field_data": {
-      "type": [
-        "null",
-        "array"
-      ],
-      "items": {
         "type": [
-          "null",
-          "object"
+            "null",
+            "array"
         ],
-        "properties": {
-          "name": {
+        "items": {
             "type": [
-              "null",
-              "string"
-            ]
-          },
-          "values": {
-            "type": [
-              "null",
-              "array"
-            ],
-            "items": {
-              "type": [
                 "null",
-                "string"
-              ]
+                "object"
+            ],
+            "properties": {
+                "name": {
+                    "type": [
+                        "null",
+                        "string"
+                    ]
+                },
+                "values": {
+                    "type": [
+                        "null",
+                        "array"
+                    ],
+                    "items": {
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
             }
-          }
         }
-      }
     }
   }
 }
