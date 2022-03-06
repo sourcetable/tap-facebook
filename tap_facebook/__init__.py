@@ -836,8 +836,6 @@ def load_schema(stream):
     if expansions:
         schema['expansions'] = expansions
 
-    print(schema)
-
     return schema
 
 
