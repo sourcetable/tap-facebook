@@ -523,7 +523,6 @@ class Leads(Stream):
                                   'value': start_time}]}
         for ad in ads:
             yield from ad.get_leads(params=params)
-        yield from LeadgenForm(fbid=459837039203604).get_leads(params=params)
 
     def sync(self):
         start_time = pendulum.utcnow()
