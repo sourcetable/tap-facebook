@@ -1,107 +1,108 @@
 {
-  "type": [
-    "null",
-    "object"
-  ],
-  "properties": {
-    "id": {
-        "type": [
-            "null",
-            "string"
-        ]
-    },
-    "ad_id": {
-        "type": [
-            "null",
-            "string"
-        ]
-    },
-    "ad_name": {
-        "type": [
-            "null",
-            "string"
-        ]
-    },
-    "adset_id": {
-        "type": [
-            "null",
-            "string"
-        ]
-    },
-    "adset_name": {
-        "type": [
-            "null",
-            "string"
-        ]
-    },
-    "campaign_id": {
-        "type": [
-            "null",
-            "string"
-        ]
-    },
-    "campaign_name": {
-        "type": [
-            "null",
-            "string"
-        ]
-    },
-    "form_id": {
-        "type": [
-            "null",
-            "string"
-        ]
-    },
-    "created_time": {
-        "type": [
-            "null",
-            "string"
-        ],
-        "format": "date-time"
-    },
-    "is_organic": {
-        "type": [
-            "null",
-            "boolean"
-        ]
-    },
-    "platform": {
-        "type": [
-            "null",
-            "string"
-        ]
-    },
-    "field_data": {
-        "type": [
-            "null",
-            "array"
-        ],
-        "items": {
-            "type": [
-                "null",
-                "object"
-            ],
-            "properties": {
-                "name": {
-                    "type": [
-                        "null",
-                        "string"
-                    ]
-                },
-                "values": {
-                    "type": [
-                        "null",
-                        "array"
-                    ],
-                    "items": {
-                        "type": [
-                            "null",
-                            "string"
-                        ]
-                    }
-                }
-            }
-        }
+    "type": [
+      "null",
+      "object"
+    ],
+    "properties": {
+      "id": {
+          "type": [
+              "null",
+              "integer"
+          ]
+      },
+      "ad_id": {
+          "type": [
+              "null",
+              "integer"
+          ]
+      },
+      "ad_name": {
+          "type": [
+              "null",
+              "string"
+          ]
+      },
+      "adset_id": {
+          "type": [
+              "null",
+              "integer"
+          ]
+      },
+      "adset_name": {
+          "type": [
+              "null",
+              "string"
+          ]
+      },
+      "campaign_id": {
+          "type": [
+              "null",
+              "integer"
+          ]
+      },
+      "campaign_name": {
+          "type": [
+              "null",
+              "string"
+          ]
+      },
+      "form_id": {
+          "type": [
+              "null",
+              "integer"
+          ]
+      },
+      "created_time": {
+          "type": [
+              "null",
+              "string"
+          ],
+          "format": "date-time"
+      },
+      "is_organic": {
+          "type": [
+              "null",
+              "boolean"
+          ]
+      },
+      "platform": {
+          "type": [
+              "null",
+              "string"
+          ]
+      },
+      "field_data": {
+          "type": [
+              "null",
+              "array"
+          ],
+          "items": {
+              "type": [
+                  "null",
+                  "object"
+              ],
+              "properties": {
+                  "name": {
+                      "type": [
+                          "null",
+                          "string"
+                      ]
+                  },
+                  "values": {
+                      "type": [
+                          "null",
+                          "array"
+                      ],
+                      "items": {
+                          "type": [
+                              "null",
+                              "string"
+                          ]
+                      }
+                  }
+              }
+          }
+      }
     }
   }
-}
+  
