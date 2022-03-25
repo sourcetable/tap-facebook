@@ -529,7 +529,9 @@ class Leads(Stream):
         if CONFIG.get('is_historical_sync'):
             previous_start_time = CONFIG.get('start_date')
         else:
-            previous_start_time = self.state.get("bookmarks", {}).get("leads", {}).get(self.replication_key, CONFIG.get('start_date'))
+            previous_start_time = self.state.get("bookmarks", {}).get("leads", {}).get(self.replication_key)
+        if previous_start_time == 'None' or not previous_start_time:
+            previous_start_time = CONFIG.get('start_date')
         previous_start_time = pendulum.parse(previous_start_time)
         ads = self.get_ads()
         leads = self.get_leads(ads, start_time, int(previous_start_time.timestamp()))
